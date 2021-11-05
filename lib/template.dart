@@ -1,4 +1,4 @@
-import 'dart:convert';
+import 'dart:convert' as convert;
 import 'package:json2dart_serialization/json_generator.dart' as main;
 
 abstract class Template {
@@ -19,16 +19,16 @@ abstract class Template {
 }
 
 class DefaultTemplate extends Template {
-  String srcJson;
+  String json;
   String className;
 
   String tab = "  ";
 
-  DefaultTemplate({this.srcJson, this.className = "Entity"});
+  DefaultTemplate({required this.json, this.className = "Entity"});
 
   @override
   String constructor() {
-    var fieldList = FieldHelper(srcJson).getFields();
+    var fieldList = FieldHelper(json).getFields();
     var filedString = StringBuffer();
     fieldList.forEach((f) {
       String name;
@@ -61,7 +61,7 @@ class DefaultTemplate extends Template {
   String field() {
 //    var useJsonKey
 
-    var fieldList = FieldHelper(srcJson).getFields();
+    var fieldList = FieldHelper(json).getFields();
     var sb = StringBuffer();
     fieldList.forEach((f) {
       sb.writeln();
@@ -98,35 +98,38 @@ class DefaultTemplate extends Template {
   @override
   String method() {
     if (main.isStaticMethod) {
-      return "  static $className fromJson(Map<String, dynamic> srcJson) => _\$${className}FromJson(srcJson);";
+      return "  static $className fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);";
     }
-    return "  factory $className.fromJson(Map<String, dynamic> srcJson) => _\$${className}FromJson(srcJson);";
+    return "  factory $className.fromJson(Map<String, dynamic> json) => _\$${className}FromJson(json);";
   }
 
-  List<Field> get fieldList => FieldHelper(srcJson).getFields();
+  List<Field> get fieldList => FieldHelper(json).getFields();
 
-  bool get isList => json.decode(srcJson) is List;
+  bool get isList => convert.json.decode(json) is List;
 
   ListTemplate getListTemplate() {
     if (this is ListTemplate) {
-      return this;
+      return this as ListTemplate;
     }
     return ListTemplate(
-        srcJson: srcJson, className: className, delegateTemplate: this);
+        json: json, className: className, delegateTemplate: this);
   }
 }
 
 class ListTemplate extends DefaultTemplate {
-  Template delegateTemplate;
+  Template? delegateTemplate;
 
   ListTemplate(
-      {String srcJson, String className = "Entity", this.delegateTemplate})
-      : super(className: className, srcJson: srcJson);
+      {required String json,
+      String className = "Entity",
+      this.delegateTemplate})
+      : super(className: className, json: json);
 
   @override
   String declare() {
-    return _declareListMethod() + "\n" + delegateTemplate?.declare() ??
-        super.declare();
+    return _declareListMethod() +
+        "\n" +
+        (delegateTemplate?.declare() ?? super.declare());
   }
 
   String _declareListMethod() {
@@ -163,12 +166,13 @@ class ListTemplate extends DefaultTemplate {
 
   @override
   List<Field> get fieldList =>
-      FieldHelper(json.encode(json.decode(srcJson)[0])).getFields();
+      FieldHelper(convert.json.encode(convert.json.decode(json)[0]))
+          .getFields();
 }
 
 class V1Template extends DefaultTemplate {
-  V1Template({String srcJson, String className = "Entity"})
-      : super(className: className, srcJson: srcJson);
+  V1Template({required String json, String className = "Entity"})
+      : super(className: className, json: json);
 
   @override
   String interface() => "";
@@ -185,9 +189,9 @@ class V1Template extends DefaultTemplate {
 }
 
 class FieldHelper {
-  String srcJson;
+  String json;
 
-  FieldHelper(this.srcJson);
+  FieldHelper(this.json);
 
   List<Field> _getMapFiled(Map<String, dynamic> map) {
     List<Field> list = [];
@@ -210,7 +214,7 @@ class FieldHelper {
   }
 
   List<Field> getFields() {
-    var j = json.decode(srcJson);
+    var j = convert.json.decode(json);
     if (j is Map<String, dynamic>) {
       return _getMapFiled(j);
     } else if (j is List) {
@@ -248,7 +252,7 @@ class ListField extends Field {
   ListField(this.list, this.nameString);
 
   bool get childIsObject {
-    if (list == null || list.isEmpty) {
+    if (list.isEmpty) {
       return false;
     }
     if (list[0] is Map<String, dynamic>) {
@@ -259,7 +263,7 @@ class ListField extends Field {
 
   String get typeName {
     String type = "dynamic";
-    if (list == null || list.isEmpty) {
+    if (list.isEmpty) {
       return type;
     }
     var item = list[0];
@@ -313,14 +317,14 @@ ${template.end()}
 }
 
 String firstLetterUpper(String value) {
-  if (value == null || value.isEmpty) {
+  if (value.isEmpty) {
     return "";
   }
   return value[0].toUpperCase() + value.substring(1);
 }
 
 String firstLetterLower(String value) {
-  if (value == null || value.isEmpty) {
+  if (value.isEmpty) {
     return "";
   }
   return value[0].toLowerCase() + value.substring(1);

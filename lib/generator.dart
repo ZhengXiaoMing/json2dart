@@ -5,7 +5,7 @@ import 'package:json2dart_serialization/template.dart';
 
 class Generator {
   String jsonString;
-  String entityName;
+  String? entityName;
   Version version;
 
   Generator(this.jsonString, [this.entityName, this.version = Version.v0]) {
@@ -18,9 +18,9 @@ class Generator {
     var entityName = this.entityName ?? "Entity";
     DefaultTemplate template;
     if (version == Version.v1) {
-      template = V1Template(srcJson: jsonString, className: entityName);
+      template = V1Template(json: jsonString, className: entityName);
     } else {
-      template = DefaultTemplate(srcJson: jsonString, className: entityName);
+      template = DefaultTemplate(json: jsonString, className: entityName);
     }
 
     if (!template.isList) {
@@ -47,7 +47,7 @@ class Generator {
   }
 
   void handleInputClassName() {
-    final text = eClassName.value;
+    final text = eClassName.value ?? "";
     final lines = text.split("\n");
 
     for (var i = 0; i < templateList.length; i++) {
@@ -65,20 +65,20 @@ class Generator {
     fieldList.forEach((filed) {
       if (filed is MapField) {
         DefaultTemplate template = DefaultTemplate(
-            srcJson: json.encode(filed.map), className: filed.typeString);
+            json: json.encode(filed.map), className: filed.typeString);
         if (version == Version.v1) {
           template = V1Template(
-              srcJson: json.encode(filed.map), className: filed.typeString);
+              json: json.encode(filed.map), className: filed.typeString);
         }
         templateList.add(template);
         refreshTemplate(template);
       } else if (filed is ListField) {
         if (filed.childIsObject) {
           DefaultTemplate template = DefaultTemplate(
-              srcJson: json.encode(filed.list[0]), className: filed.typeName);
+              json: json.encode(filed.list[0]), className: filed.typeName);
           if (version == Version.v1) {
             template = V1Template(
-                srcJson: json.encode(filed.list[0]), className: filed.typeName);
+                json: json.encode(filed.list[0]), className: filed.typeName);
           }
           templateList.add(template);
           refreshTemplate(template);
@@ -87,7 +87,7 @@ class Generator {
     });
   }
 
-  String get fileName => camelCase2UnderScoreCase(entityName);
+  String get fileName => camelCase2UnderScoreCase(entityName ?? "");
 
   static const String importString =
       "import 'package:json_annotation/json_annotation.dart';";
@@ -111,7 +111,7 @@ class Generator {
 String camelCase2UnderScoreCase(String name) {
   return name[0].toLowerCase() +
       name.substring(1).replaceAllMapped(RegExp("[A-Z]"), (match) {
-        var str = match.group(0);
+        final str = match.group(0) ?? "";
         return "_" + str.toLowerCase();
       });
 }
@@ -125,8 +125,8 @@ String convertJsonString(String jsonString) {
 
   for (var i = 0; i < allMatch.length; i++) {
     //是一个小数数字
-    var m = allMatch[i];
-    var s = m.group(0);
+    final m = allMatch[i];
+    var s = m.group(0) ?? "";
 
     // 应该是double，但由于js的原因被识别成了整数数，这里对这种数据进行处理，将这里的最后一位从0替换为5，以便于让该被js识别成小数 而非数字
     s = s.replaceRange(s.length - 1, s.length, "5");

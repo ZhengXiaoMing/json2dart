@@ -5,16 +5,16 @@ description: 一个网页版本的json转dart库
 #author: Caijinglong <email@example.com>
 
 environment:
-  sdk: '>=2.0.0-dev.68.0 <3.0.0'
+  sdk: ">=2.14.0 <3.0.0"
 
 #dependencies:
 #  path: ^1.4.1
 dependencies:
   # Your other regular dependencies here
-  json_annotation: ^3.0.0
+  json_annotation: ^4.3.0
   intl: ^0.15.8
 
 dev_dependencies:
-  build_runner: ^1.6.6
-  build_web_compilers: ^2.2.3
-  json_serializable: ^3.2.0
+  build_web_compilers: ^3.2.1
+  json_serializable: ^6.0.1
+  build_runner: ^2.1.4
